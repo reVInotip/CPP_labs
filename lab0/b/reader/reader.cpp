@@ -33,6 +33,7 @@ void Reader::Read(map<wstring, int>& words) {
     wstring currentString;
     while (getline(inputStream, currentString)) {
         wstring str;
+        str.reserve(currentString.size());
         for(const wchar_t& var : currentString) {
             if (isalnum(var, locale())) {
                 str += var;
