@@ -1,5 +1,6 @@
-//typedef char valueType;
 #include <cstddef>
+#include <initializer_list>
+#pragma once
 
 template<typename valueType>
 class CircularBuffer {
@@ -15,6 +16,7 @@ class CircularBuffer {
         CircularBuffer();
         ~CircularBuffer();
         CircularBuffer(const CircularBuffer<valueType>& cb);
+        CircularBuffer(std::initializer_list<valueType> list);
 
         //Конструирует буфер заданной ёмкости.
         explicit CircularBuffer(int capacity);
@@ -85,7 +87,21 @@ class CircularBuffer {
 };
 
 template<typename valueType>
-bool operator == (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b);
+bool operator == (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a.at(i) != b.at(i)) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 template<typename valueType>
-bool operator != (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b);
+bool operator != (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b) {
+    return !(a == b);
+}

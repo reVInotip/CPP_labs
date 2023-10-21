@@ -1,10 +1,12 @@
 #include "buffer.h"
 #include <cstddef>
+#include <initializer_list>
 #include <new>
+#include <sstream>
 #include <stdexcept>
 #include <iostream>
 
-using std::out_of_range, std::invalid_argument;
+using std::out_of_range, std::invalid_argument, std::string, std::stringstream;
 
 // private functions
 
@@ -24,10 +26,6 @@ CircularBuffer<valueType>::CircularBuffer() {}
 template<typename valueType>
 CircularBuffer<valueType>::~CircularBuffer() {
     delete [] buffer;
-    cap = 0;
-    currSize = 0;
-    end = 0;
-    start = 0;
 }
 
 template<typename valueType>
@@ -37,17 +35,14 @@ CircularBuffer<valueType>::CircularBuffer(int capacity) {
 }
 
 template<typename valueType>
-CircularBuffer<valueType>::CircularBuffer(int capacity, const valueType& elem) {
-    buffer = new valueType[capacity];
+CircularBuffer<valueType>::CircularBuffer(int capacity, const valueType& elem) : CircularBuffer(capacity) {
     for(size_t i = 0; i < capacity; ++i) {
-        buffer[i] = elem + i; // временно для тестов, удалить позже
+        buffer[i] = elem;
     }
-    cap = capacity;
     end = capacity - 1;
     currSize = capacity;
 }
 
-// TO-DO Протестить проверку на совпадение типов
 template<typename valueType>
 CircularBuffer<valueType>::CircularBuffer(const CircularBuffer<valueType>& cb) {
     buffer = new valueType[cb.cap];
@@ -61,71 +56,85 @@ CircularBuffer<valueType>::CircularBuffer(const CircularBuffer<valueType>& cb) {
 }
 
 template<typename valueType>
+CircularBuffer<valueType>::CircularBuffer(std::initializer_list<valueType> list) : CircularBuffer(list.size()) {
+    size_t i = 0;
+    for (valueType val : list) {
+        buffer[i++] = val;
+    }
+    currSize = list.size();
+    end = cap - 1;
+}
+
+template<typename valueType>
 valueType& CircularBuffer<valueType>::operator [] (int i) {
-    return buffer[start + i];
+    return buffer[(start + i) % cap];
 }
 
 template<typename valueType>
 const valueType& CircularBuffer<valueType>::operator [] (int i) const {
-    return buffer[start + i];
+    return buffer[(start + i) % cap];
 }
 
 template<typename valueType>
 valueType& CircularBuffer<valueType>::at(int i) {
-    if (i >= cap) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (i >= currSize) {
+        stringstream strStream;
+        strStream << "Index: " << i << " >= " << currSize << " there " << currSize << " is count elements in buffer!";
+        throw out_of_range(strStream.str());
     }
     return buffer[(start + i) % cap];
 }
 
 template<typename valueType>
 const valueType& CircularBuffer<valueType>::at(int i) const {
-    if (i >= cap) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (i >= currSize) {
+        stringstream strStream;
+        strStream << "Index: " << i << " >= " << currSize << " there " << currSize << " is count elements in buffer!";
+        throw out_of_range(strStream.str());
     }
     return buffer[(start + i) % cap];
 }
 
 template<typename valueType>
 valueType& CircularBuffer<valueType>::front() {
-    if (cap == 0) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (currSize == 0) {
+        throw out_of_range("Circular buffer is empty!");
     }
     return buffer[start];
 }
 
 template<typename valueType>
 const valueType& CircularBuffer<valueType>::front() const {
-    if (cap == 0) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (currSize == 0) {
+        throw out_of_range("Circular buffer is empty!");
     }
     return buffer[start];
 }
 
 template<typename valueType>
 valueType& CircularBuffer<valueType>::back() {
-    if (cap == 0) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (currSize == 0) {
+        throw out_of_range("Circular buffer is empty!");
     }
     return buffer[end];
 }
 
 template<typename valueType>
 const valueType& CircularBuffer<valueType>::back() const {
-    if (cap == 0) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (currSize == 0) {
+        throw out_of_range("Circular buffer is empty!");
     }
     return buffer[end];
 }
 
 template<typename valueType>
 valueType* CircularBuffer<valueType>::linearize() {
-    if (cap == 0) {
+    if (currSize == 0) {
         return nullptr;
     }
 
     for(size_t i = 0; i < start; ++i) {
-        for(size_t j = 0; j < currSize - 1; ++j) {
+        for(size_t j = 0; j < cap - 1; ++j) {
             swapElements(&buffer[j], &buffer[j + 1]);
         }
     }
@@ -142,10 +151,12 @@ bool CircularBuffer<valueType>::isLinearized() const {
 
 template<typename valueType>
 void CircularBuffer<valueType>::rotate(int newBegin) {
-    if (cap == 0) {
+    if (currSize == 0) {
         return;
-    } else if (newBegin < currSize) {
-        throw out_of_range("Circular buffer have not elements on this index!");
+    } else if (newBegin >= currSize) {
+        stringstream strStream;
+        strStream << "Index: " << newBegin << " >= " << currSize << " there " << currSize << " is count elements in buffer!";
+        throw out_of_range(strStream.str());
     }
 
     for(size_t i = 0; i < newBegin; ++i) {
@@ -154,15 +165,8 @@ void CircularBuffer<valueType>::rotate(int newBegin) {
         }
     }
 
-    start = start - newBegin;
-    if (start < 0) {
-        start += currSize;
-    }
-
-    end = end - newBegin;
-    if (end < 0) {
-        end += currSize;
-    }
+    start = (newBegin > start) ? ((start + currSize - 1) - newBegin) : (start - newBegin);
+    end = (newBegin > end) ? ((end + currSize - 1) - newBegin) : (end - newBegin);
 }
 
 template<typename valueType>
@@ -192,25 +196,43 @@ int CircularBuffer<valueType>::capacity() const {
 
 template<typename valueType>
 void CircularBuffer<valueType>::setCapacity(int newCapacity) {
-    if (newCapacity > cap) {
+    if (newCapacity == cap) {
         return;
     }
 
-    linearize();
+    valueType* newBuffer = new valueType[newCapacity];
+    if (!isLinearized()) {
+        linearize();
+    }
+
+    for(size_t i = 0; i < newCapacity; ++i) {
+        if (i <= currSize - 1) {
+            newBuffer[i] = buffer[i];
+        }
+    }
+
+    delete [] buffer;
+    buffer = newBuffer;
     cap = newCapacity;
-    end = newCapacity - 1;
+
+    if (newCapacity < currSize) {
+        currSize = newCapacity;
+        end = newCapacity - 1;
+    }
 }
 
 template<typename valueType>
 void CircularBuffer<valueType>::resize(int newSize, const valueType& item) {
     if (newSize < 0) {
-        throw invalid_argument("New buffer size is invalid!");
+        throw invalid_argument("Cricular buffer size can not be less than zero!");
     } else if (newSize == cap) {
         return;
     }
 
     valueType* newBuffer = new valueType[newSize];
-    linearize();
+    if (!isLinearized()) {
+        linearize();
+    }
 
     for(size_t i = 0; i < newSize; ++i) {
         if (i <= currSize - 1) {
@@ -230,6 +252,7 @@ void CircularBuffer<valueType>::resize(int newSize, const valueType& item) {
 template<typename valueType>
 CircularBuffer<valueType>& CircularBuffer<valueType>::operator = (const CircularBuffer& cb) {
     if (&cb != this) {
+        delete [] buffer;
         buffer = new valueType[cb.cap];
         for(size_t i = 0; i < cb.currSize; ++i) {
             buffer[i] = cb.buffer[i];
@@ -245,7 +268,7 @@ CircularBuffer<valueType>& CircularBuffer<valueType>::operator = (const Circular
 
 template<typename valueType>
 void CircularBuffer<valueType>::swap(CircularBuffer& cb) {
-    CircularBuffer<valueType> a = *this;
+    CircularBuffer<valueType> a = cb;
     cb = *this;
     *this = a;
 }
@@ -254,8 +277,8 @@ void CircularBuffer<valueType>::swap(CircularBuffer& cb) {
 template<typename valueType>
 void CircularBuffer<valueType>::print() {
     std::cout << "Start: " << start << "\t" << "End: " << end << "\n";
-    for(int i = 0; i < currSize; ++i) {
-        std::cout << buffer[i % cap] << "\t";
+    for(int i = 0; i < cap; ++i) {
+        std::cout << buffer[i] << "\t";
     }
     std::cout << std::endl;
 }
@@ -263,7 +286,7 @@ void CircularBuffer<valueType>::print() {
 template<typename valueType>
 void CircularBuffer<valueType>::pushBack(const valueType& item) {
     if (cap == 0) {
-        out_of_range("Circular buffer capacity is zero!");
+        return;
     }
 
     if (currSize < cap) {
@@ -279,7 +302,7 @@ void CircularBuffer<valueType>::pushBack(const valueType& item) {
 template<typename valueType>
 void CircularBuffer<valueType>::pushFront(const valueType& item) {
     if (cap == 0) {
-        out_of_range("Circular buffer capacity is zero!");
+        return;
     }
 
     if (currSize < cap) {
@@ -295,7 +318,7 @@ void CircularBuffer<valueType>::pushFront(const valueType& item) {
 template<typename valueType>
 void CircularBuffer<valueType>::popBack() {
     if (currSize == 0) {
-        throw out_of_range("Circular buffer alredy clear!");
+        throw out_of_range("Circular buffer is empty!");
     }
     end = (end == 0) ? cap - 1 : end - 1;
     --currSize;
@@ -304,7 +327,7 @@ void CircularBuffer<valueType>::popBack() {
 template<typename valueType>
 void CircularBuffer<valueType>::popFront() {
     if (currSize == 0) {
-        throw out_of_range("Circular buffer alredy clear!");
+        throw out_of_range("Circular buffer is empty!");
     }
     start = (start + 1) % cap;
     --currSize;
@@ -313,25 +336,43 @@ void CircularBuffer<valueType>::popFront() {
 template<typename valueType>
 void CircularBuffer<valueType>::insert(int pos, const valueType& item) {
     if (pos >= cap) {
-        throw out_of_range("Circular buffer index out of range!");
+        stringstream strStream;
+        strStream << "Index: " << pos << " >= " << cap << " there " << cap << " is circular buffer limit!";
+        throw out_of_range(strStream.str());
     }
     buffer[(start + pos) % cap] = item;
 }
 
 template<typename valueType>
 void CircularBuffer<valueType>::erase(int first, int last) {
-    if (first >= currSize || last - 1 >= currSize || first < 0 || last < 0 || first > last - 1) {
-        throw out_of_range("Circular buffer index out of range!");
+    if (first >= currSize) {
+        stringstream strStream;
+        strStream << "Index: " << first << " >= " << currSize << " there " << currSize << " is count elements in buffer!";
+        throw out_of_range(strStream.str());
+    } else if (last - 1 >= currSize) {
+        stringstream strStream;
+        strStream << "Index: " << last - 1 << " (last - 1) >= " << currSize << " there " << currSize << " is count elements in buffer!";
+        throw out_of_range(strStream.str());
+    } else if (first < 0) {
+        stringstream strStream;
+        strStream << "Index: " << first << " can not be less than zero!";
+        throw invalid_argument(strStream.str());
+    } else if (last - 1 < 0) {
+        stringstream strStream;
+        strStream << "Index: " << last - 1 << " (last - 1) can not be less than zero!";
+        throw invalid_argument(strStream.str());
+    } else if (first > last - 1) {
+        stringstream strStream;
+        strStream << "Index " << first << " (first) can not be less than " << last - 1 << " (last - 1)!";
+        throw invalid_argument(strStream.str());
     }
 
-    int j = 0;
-    for (size_t i = last - 1; i < currSize; ++i) {
-        buffer[(start + first + j) % currSize] = buffer[start - first + i + 1];
-        ++j;
+    for (size_t i = first; i < currSize; ++i) {
+        buffer[(start + i) % currSize] = buffer[(start + i + (last - first)) % currSize];
     }
 
+    end = (end <= last - first - 1) ? end - (last - first - 1) + cap - 1 : end - (last - first - 1);
     currSize -= last - first;
-    end = (end >= last - first) ? end - (last - first) : end - (last - first) + currSize;
 }
 
 template<typename valueType>
@@ -341,4 +382,27 @@ void CircularBuffer<valueType>::clear() {
     end = 0;
 }
 
+/*
+template<typename valueType>
+bool operator == (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a.at(i) != b.at(i)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template<typename valueType>
+bool operator != (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b) {
+    return !(a == b);
+}
+*/
 template class CircularBuffer<int>;
+template class CircularBuffer<string>;
+template class CircularBuffer<char>;
