@@ -172,7 +172,7 @@ class CircularBuffer {
             @brief Delete elements in inerval [first, last).
             @param first First index in interval.
             @param last Last index in interval.
-            @throw std::out_of_range
+            @throw std::out_of_range, std::invalid_argument
         */
         void erase(int first, int last);
         
