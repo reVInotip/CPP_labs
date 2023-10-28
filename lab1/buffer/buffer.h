@@ -13,77 +13,173 @@ class CircularBuffer {
 
         void swapElements(valueType* a, valueType* b);
     public:
-        CircularBuffer();
         ~CircularBuffer();
         CircularBuffer(const CircularBuffer<valueType>& cb);
         CircularBuffer(std::initializer_list<valueType> list);
 
-        //Конструирует буфер заданной ёмкости.
+        /**
+            @brief Create buffer with set capacity.
+            @param capacity Buffer capacity
+        */
         explicit CircularBuffer(int capacity);
-        //Конструирует буфер заданной ёмкости, целиком заполняет его элементом elem.
+
+        /**
+            @brief Create buffer with set capacity and fills it with an element
+            @param capacity Buffer capacity
+            @param elem The element that fills the buffer
+        */
         CircularBuffer(int capacity, const valueType& elem);
 
-        //Доступ по индексу. Не проверяют правильность индекса.
+        /**
+            @brief Access to circular buffer element by index.
+            The correctness of the index is not checked.
+            @param i - Index for access to circular buffer element.
+        */
         valueType& operator [] (int i);
         const valueType& operator [] (int i) const;
         
-        //Доступ по индексу. Методы бросают исключение в случае неверного индекса.
+        /**
+            @brief Access to circular buffer element by index.
+            The correctness of the index is checked.
+            @param i - Index for access to circular buffer element.
+            @throw std::out_of_range If index exceed count element in circular buffer.
+        */
         valueType& at(int i);
         const valueType& at(int i) const;
 
-        valueType& front(); //Ссылка на первый элемент.
-        valueType& back();  //Ссылка на последний элемент.
+        /**
+            @brief Return link on first element in circular buffer.
+            @throw std::out_of_range If buffer is empty.
+        */
+        valueType& front();
         const valueType& front() const;
+
+        /**
+            @brief Return link on last element in circular buffer.
+            @throw std::out_of_range If buffer is empty.
+        */
+        valueType& back();
         const valueType& back() const;
 
-        //Линеаризация - сдвинуть кольцевой буфер так, что его первый элемент
-        //переместится в начало аллоцированной памяти. Возвращает указатель 
-        //на первый элемент.
+        /**
+            @brief Shifts circular buffer so that its first element
+            moves to the beginning of the allocated memory.
+            @return Return poiner on first circular buffer element.
+        */
         valueType* linearize();
-        //Проверяет, является ли буфер линеаризованным.
+
+        /**
+            @brief Checks whether the circular buffer is linearized.
+            @return True - if buffer is linearized, false if buffer is not linearized.
+        */
         bool isLinearized() const;
-        //Сдвигает буфер так, что по нулевому индексу окажется элемент 
-        //с индексом newBegin.
+        
+        /**
+            @brief Shifts circular buffer so that the index is zero is an index newBegin.
+            @param newBegin Index for shift.
+            @throw std::out_of_range If index exceed count element in circular buffer.
+        */
         void rotate(int newBegin);
-        //Количество элементов, хранящихся в буфере.
+
+        /**
+            @brief Return count elements in buffer.
+            @return Count element in buffer.
+        */
         int size() const;
+
+        /**
+            @brief Checks if circular buffer is empty
+            @return True if count elements in buffer is equally zero, false if not.
+        */
         bool empty() const;
-        //true, если size() == capacity().
+
+        /**
+            @brief Checks if circular count elements in buffer is equally capacity.
+            @return True if count elements in buffer equally capacity, false if not.
+        */
         bool full() const;
-        //Количество свободных ячеек в буфере.
+
+        /**
+            @brief Checks count free cells in circular buffer.
+            @return Count free cells in circular buffer.
+        */
         int reserve() const;
-        //ёмкость буфера
+        
+        /**
+            @brief Return buffer capacity.
+        */
         int capacity() const;
 
-        void setCapacity(int newCapacity); // чо блять она делает?
-        //Изменяет размер буфера.
-        //В случае расширения, новые элементы заполняются элементом item.
-        void resize(int newSize, const valueType& item = valueType());
-        //Оператор присваивания.
-        CircularBuffer& operator = (const CircularBuffer& cb);
-        //Обменивает содержимое буфера с буфером cb.
-        void swap(CircularBuffer& cb);
+        /**
+            @brief Reduces buffer capacity if new capacity is less than the current one.
+            Otherwise does not candge in.
+            @param newCapacity New circular buffer capacity. 
+        */
+        void setCapacity(int newCapacity);
 
-        //Добавляет элемент в конец буфера. 
-        //Если текущий размер буфера равен его ёмкости, то переписывается
-        //первый элемент буфера (т.е., буфер закольцован). 
+        /**
+            @brief Change buffer capacity. if new capacity is more than current capacity
+            fill new buffer cells with an item.
+            @param newSize New buffer capacity.
+            @param item Item for fill new buffer cells.
+            @throw std::invalid_argument if new size less than zero.
+        */
+        void resize(int newSize, const valueType& item = valueType());
+
+        CircularBuffer& operator = (const CircularBuffer& cb);
+
+        /**
+            @brief Swap two buffer contents.
+            @param cb Buffer to swap.
+        */
+        void swap(CircularBuffer& cb);
+        
+        /**
+            @brief Add new element to buffer end. If count elements in buffer is equally
+            buffer capacity than change first buffer element.
+            @param item Item to push.
+        */
         void pushBack(const valueType& item = valueType());
-        //Добавляет новый элемент перед первым элементом буфера. 
-        //Аналогично push_back, может переписать последний элемент буфера.
+        
+        /**
+            @brief Add new element to buffer start. If count elements in buffer is equally
+            buffer capacity than change last buffer element.
+            @param item Item to push.
+        */
         void pushFront(const valueType& item = valueType());
-        //удаляет последний элемент буфера.
+
+        /**
+            @brief Delete last element in buffer.
+            @throw std::out_of_range if count elements in buffer is equally zero.
+        */
         void popBack();
-        //удаляет первый элемент буфера.
+
+        /**
+            @brief Delete first element in buffer.
+            @throw std::out_of_range if count elements in buffer is equally zero.
+        */
         void popFront();
 
-        //Вставляет элемент item по индексу pos. Ёмкость буфера остается неизменной.
+        /**
+            @brief Inserts the element by index. Buffer capacity remains unchanged.
+            @param pos Index to insert.
+            @param item Element for insert.
+            @throw std::out_of_range if index is more or equally buffer capacity.
+        */
         void insert(int pos, const valueType& item = valueType());
-        //Удаляет элементы из буфера в интервале [first, last).
-        void erase(int first, int last);
-        //Очищает буфер.
-        void clear();
 
-        void print(); // убрать!
+        /**
+            @brief Delete elements in inerval [first, last).
+            @param first First index in interval.
+            @param last Last index in interval.
+            @throw std::out_of_range
+        */
+        void erase(int first, int last);
+        
+        /**
+            @brief Clear buffer without resize.
+        */
+        void clear();
 };
 
 template<typename valueType>

@@ -21,9 +21,6 @@ void CircularBuffer<valueType>::swapElements(valueType* a, valueType* b) {
 // public functions
 
 template<typename valueType>
-CircularBuffer<valueType>::CircularBuffer() {}
-
-template<typename valueType>
 CircularBuffer<valueType>::~CircularBuffer() {
     delete [] buffer;
 }
@@ -273,16 +270,6 @@ void CircularBuffer<valueType>::swap(CircularBuffer& cb) {
     *this = a;
 }
 
-// убрать это
-template<typename valueType>
-void CircularBuffer<valueType>::print() {
-    std::cout << "Start: " << start << "\t" << "End: " << end << "\n";
-    for(int i = 0; i < cap; ++i) {
-        std::cout << buffer[i] << "\t";
-    }
-    std::cout << std::endl;
-}
-
 template<typename valueType>
 void CircularBuffer<valueType>::pushBack(const valueType& item) {
     if (cap == 0) {
@@ -382,27 +369,8 @@ void CircularBuffer<valueType>::clear() {
     end = 0;
 }
 
-/*
-template<typename valueType>
-bool operator == (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b) {
-    if (a.size() != b.size()) {
-        return false;
-    }
-    
-    for (size_t i = 0; i < a.size(); ++i) {
-        if (a.at(i) != b.at(i)) {
-            return false;
-        }
-    }
+// end
 
-    return true;
-}
-
-template<typename valueType>
-bool operator != (const CircularBuffer<valueType> & a, const CircularBuffer<valueType> & b) {
-    return !(a == b);
-}
-*/
 template class CircularBuffer<int>;
 template class CircularBuffer<string>;
 template class CircularBuffer<char>;
