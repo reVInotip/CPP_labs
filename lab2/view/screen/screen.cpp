@@ -12,10 +12,6 @@ using std::cout, std::endl, std::make_shared, std::string, std::ofstream, std::u
 
 using ScreenPtr = std::shared_ptr<I_Screen>;
 
-/*void Screen::Sleep(long int nanoseconds) const {
-    std::this_thread::sleep_for(std::chrono::nanoseconds(nanoseconds));
-}*/
-
 void Screen::Clear() const {
     cout << "\x1B[2J\x1B[H";
 }

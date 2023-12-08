@@ -3,16 +3,19 @@
 
 using std::vector;
 
+// попробовать получше сделать
+
 void Field::CalcBitsPosition(long long (&bits)[9], long long j) const {
-    bits[0] = 7 - ((8 + ((j - 1) % 8)) % 8);
+    const long long size = width_ * height_;
+    bits[0] = 7 - ((((width_ + ((j - 1) % width_)) % width_) + (j / width_) * width_) % 8);
     bits[1] = 7 - (j % 8);
-    bits[2] = 7 - ((j + 1) % 8);
-    bits[3] = 7 - ((8 + (((j - width_ - 1) % 8))) % 8);
-    bits[4] = 7 - ((8 + (((j - width_) % 8))) % 8);
-    bits[5] = 7 - ((8 + (((j - width_ + 1) % 8))) % 8);
-    bits[6] = 7 - ((j + width_ - 1) % 8);
-    bits[7] = 7 - ((j + width_) % 8);
-    bits[8] = 7 - ((j + width_ + 1) % 8);
+    bits[2] = 7 - ((((j + 1) % width_) + (j / width_) * width_) % 8);
+    bits[3] = 7 - (((size + ((j - width_ - 1) % size)) % size) % 8);
+    bits[4] = 7 - (((size + ((j - width_) % size)) % size) % 8);
+    bits[5] = 7 - (((size + ((j - width_ + 1) % size)) % size) % 8);
+    bits[6] = 7 - (((j + width_ - 1) % size) % 8);
+    bits[7] = 7 - (((j + width_) % size) % 8);
+    bits[8] = 7 - (((j + width_ + 1) % size) % 8);
 }
 
 void Field::CalcBytesPosition(long long (&pos)[9], long long j) const {
@@ -79,7 +82,7 @@ void Field::SetField(const int countIterations, unordered_set<char>& birth, unor
                 !!(field_[pos[7]] & (1 << bits[7])) + !!(field_[pos[4]] & (1 << bits[4])) + 
                 !!(field_[pos[6]] & (1 << bits[6])) + !!(field_[pos[3]] & (1 << bits[3])) +
                 !!(field_[pos[8]] & (1 << bits[8])) + !!(field_[pos[5]] & (1 << bits[5]));
-            
+
             int isSurvive = 0, isLive = 0;
             if (field_[pos[1]] & (1 << bits[1])) {
                 isSurvive = survival.count(sumNeighbors);
