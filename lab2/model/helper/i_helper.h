@@ -14,6 +14,9 @@ class I_Helper {
         I_Helper& operator = (const I_Helper&) = delete;
     public:
         static HelperPtr CreateInstanse();
-        virtual void GetInfoAboutRule(const string& rule) const = 0;
-        virtual void GetInfoAboutAllRules() const = 0;
+        virtual const string GetInfoAboutCommand(const string& command) = 0;
+        virtual const string GetInfoAboutAllCommands() = 0;
+        virtual const string GetDocumetation() const = 0;
+        virtual void PrintHelp(const string& command) = 0;
+        virtual void PrintDocs() = 0;
 };

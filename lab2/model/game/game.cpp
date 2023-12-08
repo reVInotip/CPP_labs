@@ -1,6 +1,22 @@
 #include "game.h"
-#include <cstddef>
+#include "../../view/screen/i_screen.h"
+#include "../../utils/game_params.h"
+#include <codecvt>
 #include <iostream>
+#include <memory>
+#include <string>
+
+using GamePtr = std::shared_ptr<I_Game>;
+using ScreenPtr = std::shared_ptr<I_Screen>;
+using std::make_shared, std::string;
+
+GamePtr I_Game::CreateInstanse() {
+    return make_shared<Game>(Game());
+}
+
+GamePtr I_Game::CreateInstanse(const GameParams& gameParams) {
+    return make_shared<Game>(Game(gameParams));
+}
 
 void Game::SetRules() {
     const auto rg = {2, 3};
@@ -13,34 +29,66 @@ void Game::SetRules(unordered_set<char>& birth, unordered_set<char>& survival) {
     rules_.survival_ = survival;
 }
 
-Game::Game() {
-    width_ = 2;
-    height_ = 3;
+Game::Game() : Field() {
     name_ = "Default Game";
+    screen_ = I_Screen::CreateInstanse();
 
     SetRules();
-
-    field_.reserve(1);
-
-    field_[0] = 0b00101010;
 }
 
-Game::Game(const vector<char>& field, const size_t width, const size_t height) {
-    width_ = width;
-    height_ = height;
+Game::Game(const GameParams& gameParams) : 
+Field(gameParams.field_, gameParams.width_, gameParams.height_) {
+    screen_ = I_Screen::CreateInstanse();
 
-    SetRules();
+    rules_.birth_ = gameParams.birth_;
+    rules_.survival_ = gameParams.survival_;
+    name_ = gameParams.name_;
+}
 
-    const size_t size = width * height;
-    const size_t fieldSize = (size / 8) + (size % 8 != 0);
-    field_ = field;
+string Game::GetName() const {
+    return name_;
+}
+
+long long Game::GetWidth() const {
+    return Field::GetWidth();
+}
+
+long long Game::GetHeight() const {
+    return Field::GetHeight();
+}
+
+vector<char> Game::GetField() const {
+    return Field::GetField();
+}
+
+unordered_set<char> Game::GetBirth() const {
+    return rules_.birth_;
+}
+
+unordered_set<char> Game::GetSurvival() const {
+    return rules_.survival_;
 }
 
 void Game::SetField(const int countIterations) {
-    const size_t size = width_ * height_;
-    for (int i = 0; i < countIterations; ++i) {
-        for (size_t j = 0; j < size; ++j) {
-            const char currentPoint = field_[j / 8] & (1 << (size - j - 1));
-        }
-    }
+    Field::SetField(countIterations, rules_.birth_, rules_.survival_);
+}
+
+void Game::PrintField() const {
+    screen_->PrintGame(*this);
+}
+
+void Game::Dump(const string& fileName) {
+    screen_->PrintGame(fileName, *this);
+}
+
+bool Game::IsLife(long long x, long long y) const {
+    return Field::IsLife(x, y);
+}
+
+char& Game::operator [] (int i) {
+    return Field::operator [] (i);
+}
+
+const char& Game::operator [] (int i) const {
+    return Field::operator [] (i);
 }

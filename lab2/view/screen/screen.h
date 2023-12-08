@@ -12,10 +12,12 @@ class Screen final : public I_Screen {
     private:
         static constexpr char life_ = '#';
         static constexpr char dead_ = '.';
+        //void Sleep(long int nanoseconds) const;
+        void Clear() const;
     public:
-        Screen();
+        Screen() = default;
         void PrintGame(const I_Game& game) override;
-        void PrintGame(const string outputFile, const I_Game& game) override;
-        void PrintHelp(const I_Helper& helper) override;
+        void PrintGame(const string& fileName, const I_Game& game) override;
+        void PrintInfo(const string& info) override;
         ~Screen() = default;
 };
