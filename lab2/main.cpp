@@ -31,10 +31,10 @@ int main(int argc, char *argv[]) {
 
 #include "model/game/i_game.h"
 #include "utils/game_params.h"
-#include <gtest/gtest.h>
 #include <vector>
 #include <unordered_set>
 #include <fstream>
+#include <gtest/gtest.h>
 
 using GamePtr = std::shared_ptr<I_Game>;
 using std::vector, std::unordered_set, std::ifstream;

@@ -10,7 +10,6 @@ class Field {
         long long height_;
 
         void CalcBitsPosition(long long (&bits)[9], long long j) const;
-        void CalcBytesPosition(long long (&pos)[9], long long j) const;
     public:
         Field();
         Field(const vector<char>& field, const long long width, const long long height);
