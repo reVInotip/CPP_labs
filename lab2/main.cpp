@@ -1,4 +1,4 @@
-//#define test
+#define test
 
 #ifdef test
 

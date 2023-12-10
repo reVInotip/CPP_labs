@@ -5,7 +5,8 @@ using std::vector, std::unordered_set;
 
 class Field {
     private:
-        vector<char> field_;
+        vector<char> field_[2];
+        int index_;
         long long width_;
         long long height_;
 
